@@ -1,12 +1,12 @@
-<picture>
+<p align="center"><picture>
   <source media="(prefers-color-scheme: dark)" srcset="./profile-dark.svg">
   <img alt="daniel@danielrltan" src="./profile-light.svg">
-</picture>
+</picture></p>
 
-<picture>
+<p align="center"><picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://github-readme-activity-graph.vercel.app/graph?username=danielrltan&bg_color=0d1117&color=E58D7A&line=f59e0b&point=f5e6d3&area=true&hide_border=true&radius=8&custom_title=Contribution%20Graph">
   <img alt="Contribution graph" src="https://github-readme-activity-graph.vercel.app/graph?username=danielrltan&bg_color=ffffff&color=c2410c&line=92400e&point=3d2817&area=true&hide_border=true&radius=8&custom_title=Contribution%20Graph">
-</picture>
+</picture></p>
 
 <p align="center">
   <picture>
