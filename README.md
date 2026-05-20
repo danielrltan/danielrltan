@@ -4,13 +4,8 @@
 </picture>
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://github-readme-activity-graph.vercel.app/graph?username=danielrltan&bg_color=0d1117&color=E58D7A&line=f59e0b&point=f5e6d3&area=true&hide_border=true&radius=8">
-  <img alt="Activity graph" src="https://github-readme-activity-graph.vercel.app/graph?username=danielrltan&bg_color=ffffff&color=c2410c&line=92400e&point=3d2817&area=true&hide_border=true&radius=8">
-</picture>
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://github-readme-stats.vercel.app/api/top-langs/?username=danielrltan&layout=compact&hide_border=true&bg_color=0d1117&title_color=E58D7A&text_color=f5e6d3&card_width=400">
-  <img alt="Top languages" src="https://github-readme-stats.vercel.app/api/top-langs/?username=danielrltan&layout=compact&hide_border=true&bg_color=ffffff&title_color=c2410c&text_color=3d2817&card_width=400">
+  <source media="(prefers-color-scheme: dark)" srcset="https://github-readme-activity-graph.vercel.app/graph?username=danielrltan&bg_color=0d1117&color=E58D7A&line=f59e0b&point=f5e6d3&area=true&hide_border=true&radius=8&custom_title=Contribution%20Graph">
+  <img alt="Contribution graph" src="https://github-readme-activity-graph.vercel.app/graph?username=danielrltan&bg_color=ffffff&color=c2410c&line=92400e&point=3d2817&area=true&hide_border=true&radius=8&custom_title=Contribution%20Graph">
 </picture>
 
 <p align="center">
