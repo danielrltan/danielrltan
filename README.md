@@ -10,8 +10,8 @@
 
 <p align="center">
   <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://komarev.com/ghpvc/?username=danielrltan&color=E58D7A&style=for-the-badge&label=Profile+Views">
-  <img alt="Profile views" src="https://komarev.com/ghpvc/?username=danielrltan&color=c2410c&style=for-the-badge&label=Profile+Views">
+  <source media="(prefers-color-scheme: dark)" srcset="https://komarev.com/ghpvc/?username=danielrltan&color=E58D7A&style=for-the-badge&label=Profile+Visitors">
+  <img alt="Profile visitors" src="https://komarev.com/ghpvc/?username=danielrltan&color=c2410c&style=for-the-badge&label=Profile+Visitors">
 </picture>
   &nbsp;
   <a href="https://github.com/danielrltan?tab=followers"><picture>
