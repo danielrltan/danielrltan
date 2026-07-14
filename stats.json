@@ -1,0 +1,43 @@
+{
+  "languages_top": [
+    [
+      "TypeScript",
+      1038099
+    ],
+    [
+      "CSS",
+      350764
+    ],
+    [
+      "JavaScript",
+      287894
+    ],
+    [
+      "Rust",
+      180299
+    ],
+    [
+      "HTML",
+      52867
+    ],
+    [
+      "Python",
+      48271
+    ],
+    [
+      "Mako",
+      494
+    ]
+  ],
+  "languages_total_bytes": 1958688,
+  "followers": 5,
+  "following": 3,
+  "public_repos": 9,
+  "total_repos": 15,
+  "non_fork_repos": 15,
+  "stars": 1,
+  "commits_last_year": 427,
+  "prs_last_year": 2,
+  "issues_last_year": 0,
+  "private_contribs_last_year": 221
+}

@@ -1,0 +1,14 @@
+# Local-only source photo for the ASCII portrait (kept out of the public repo
+# for privacy). art.txt is the committed artifact; re-run `python img2ascii.py`
+# locally to regenerate the portrait from this file.
+portrait-src.png
+
+# Local preview scaffolding
+_preview.html
+
+# Python
+__pycache__/
+*.pyc
+
+# Stale single-theme output (build_readme.py emits profile-dark.svg + profile-light.svg)
+profile.svg

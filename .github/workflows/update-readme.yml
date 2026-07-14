@@ -1,0 +1,58 @@
+name: Update profile card
+
+on:
+  schedule:
+    # Runs every day at 07:00 UTC. Cron in GitHub Actions is always UTC.
+    - cron: "0 7 * * *"
+  workflow_dispatch: {}   # lets you trigger it manually from the Actions tab
+  push:
+    branches: [main]
+    paths:
+      - "build_readme.py"
+      - "gather_stats.py"
+      - "art.txt"
+
+# Allow the workflow to commit the regenerated files back to the repo.
+permissions:
+  contents: write
+
+concurrency:
+  group: update-profile-card
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Refresh stats.json (repos, stars, bytes, commits). Best-effort:
+      # if the token can't see everything, we keep the last committed stats
+      # and still rebuild so the "Uptime" date advances daily.
+      - name: Gather GitHub stats
+        env:
+          # STATS_TOKEN = a Personal Access Token that can read your account
+          # (private repos + contributions). Falls back to GITHUB_TOKEN, which
+          # only sees THIS repo, so the private numbers won't be accurate.
+          GH_TOKEN: ${{ secrets.STATS_TOKEN || secrets.GITHUB_TOKEN }}
+          GH_USER: danielrltan
+        run: python gather_stats.py || echo "::warning::stats refresh failed; reusing committed stats.json"
+
+      - name: Rebuild SVGs + README
+        run: python build_readme.py
+
+      - name: Commit changes if any
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add stats.json profile-dark.svg profile-light.svg README.md
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "chore: daily profile card refresh [skip ci]"
+            git push
+          fi
