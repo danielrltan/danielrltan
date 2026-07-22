@@ -1,4 +1,30 @@
 {
+  "featured": [
+    {
+      "name": "Infinite-Autoclicker",
+      "description": "Free, open-source auto clicker & macro recorder for Windows, macOS & Linux. Click at any speed (CPS), record mouse + keyboard, click by color, schedule macros. A private, cross-platform alternative to OP Auto Clicker & MurGee.",
+      "language": "Rust",
+      "stars": 0
+    },
+    {
+      "name": "repohunt",
+      "description": "Grounded GitHub repo discovery as an MCP server: live keyword search, no embeddings, no backend.",
+      "language": "TypeScript",
+      "stars": 0
+    },
+    {
+      "name": "danielrltan.com",
+      "description": "personal website",
+      "language": "TypeScript",
+      "stars": 0
+    },
+    {
+      "name": "ratemyclubs",
+      "description": "rate my professors but with clubs instead 🤯",
+      "language": "Python",
+      "stars": 1
+    }
+  ],
   "languages_top": [
     [
       "TypeScript",

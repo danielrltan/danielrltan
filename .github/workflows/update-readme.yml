@@ -10,6 +10,8 @@ on:
     paths:
       - "build_readme.py"
       - "gather_stats.py"
+      - "render3d.py"
+      - "repocards.py"
       - "art.txt"
 
 # Allow the workflow to commit the regenerated files back to the repo.
@@ -42,6 +44,8 @@ jobs:
           GH_USER: danielrltan
         run: python gather_stats.py || echo "::warning::stats refresh failed; reusing committed stats.json"
 
+      # build_readme.py also invokes render3d.py, so the animated hero is
+      # regenerated in the same pass as the neofetch card.
       - name: Rebuild SVGs + README
         run: python build_readme.py
 
@@ -49,7 +53,8 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add stats.json profile-dark.svg profile-light.svg README.md
+          git add stats.json profile-dark.svg profile-light.svg \
+                  hero-dark.svg hero-light.svg card-*.svg README.md
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else

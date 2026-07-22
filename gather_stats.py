@@ -66,7 +66,24 @@ query {
 """
 cc = json.loads(gh("api", "graphql", "-f", f"query={gql}"))["data"]["viewer"]["contributionsCollection"]
 
+# Featured repo details, rendered locally by repocards.py. Kept here so the
+# daily workflow refreshes stars/descriptions along with everything else.
+FEATURED = ["Infinite-Autoclicker", "repohunt", "danielrltan.com", "ratemyclubs"]
+featured = []
+for name in FEATURED:
+    try:
+        d = json.loads(gh("api", f"/repos/{USER}/{name}"))
+        featured.append({
+            "name": d["name"],
+            "description": d.get("description") or "",
+            "language": d.get("language"),
+            "stars": d.get("stargazers_count", 0),
+        })
+    except Exception as e:
+        print(f"  skip featured {name}: {e}", flush=True)
+
 out = {
+    "featured": featured,
     "languages_top": top,
     "languages_total_bytes": total,
     "followers": user["followers"],

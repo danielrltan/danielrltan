@@ -80,26 +80,28 @@ info.append(kv("Followers / Following:", [(f"{s['followers']} / {s['following']}
 info.append(kv("Code on GitHub:",        [(f"{s['languages_total_bytes']:,} bytes across {s['non_fork_repos']} repos", TXT)]))
 
 # --- themes ---
+# Palette is pulled from danielrltan.com (--accent-color #ff6b35 on near-black)
+# so the profile and the site read as one system.
 THEMES = {
     "dark": {
         "bg":  "#0d1117",
-        PRI:   "#E58D7A",
-        BRI:   "#f59e0b",
+        PRI:   "#ff6b35",
+        BRI:   "#ffb347",
         TXT:   "#f5e6d3",
         GRN:   "#a3b86c",
-        RED:   "#c4654b",
-        DIM:   "#7a6a5e",
-        "art": "#E58D7A",
+        RED:   "#ff2e63",
+        DIM:   "#6e7681",
+        "art": "#ff6b35",
     },
     "light": {
         "bg":  "#ffffff",
-        PRI:   "#c2410c",
-        BRI:   "#92400e",
+        PRI:   "#e2521a",
+        BRI:   "#b45309",
         TXT:   "#3d2817",
-        GRN:   "#65a30d",
-        RED:   "#b91c1c",
-        DIM:   "#a89283",
-        "art": "#c2410c",
+        GRN:   "#4d7c0f",
+        RED:   "#be123c",
+        DIM:   "#8a8a8a",
+        "art": "#e2521a",
     },
 }
 
@@ -170,12 +172,12 @@ USER = "danielrltan"
 
 # Match GitHub's actual page background so widgets blend seamlessly
 DARK = {
-    "bg": "0d1117", "title": "E58D7A", "text": "f5e6d3", "icon": "f59e0b",
-    "line": "f59e0b", "point": "f5e6d3", "color": "E58D7A", "label_bg": "0d1117",
+    "bg": "0d1117", "title": "ff6b35", "text": "f5e6d3", "icon": "ffb347",
+    "line": "ff6b35", "point": "f5e6d3", "color": "ff6b35", "label_bg": "0d1117",
 }
 LIGHT = {
-    "bg": "ffffff", "title": "c2410c", "text": "3d2817", "icon": "92400e",
-    "line": "92400e", "point": "3d2817", "color": "c2410c", "label_bg": "ffffff",
+    "bg": "ffffff", "title": "e2521a", "text": "3d2817", "icon": "b45309",
+    "line": "e2521a", "point": "3d2817", "color": "e2521a", "label_bg": "ffffff",
 }
 
 def picture(dark_url, light_url, alt):
@@ -208,14 +210,86 @@ def activity_url(t):
             f"&area=true&hide_border=true&radius=8&custom_title=Contribution%20Graph")
 activity = picture(activity_url(DARK), activity_url(LIGHT), "Contribution graph")
 
-readme = f"""<p align="center">{neofetch}</p>
+# --- animated 3D hero (see render3d.py) ---
+import render3d
+render3d.main()
+hero = picture("./hero-dark.svg", "./hero-light.svg", "Daniel Tan")
 
-<p align="center">{activity}</p>
+# --- featured repos, rendered locally (see repocards.py) ---
+import repocards
+
+CARD_THEMES = {
+    "dark":  {"bg": "#0d1117", "card": "#11161d", "border": "#262c36",
+              "accent": "#ff6b35", "text": "#f5e6d3", "dim": "#8b949e"},
+    "light": {"bg": "#ffffff", "card": "#fbfaf9", "border": "#d8d4d0",
+              "accent": "#e2521a", "text": "#3d2817", "dim": "#6a6a6a"},
+}
+# One SVG per repo, so each card stays an independent link.
+_featured = s.get("featured", [])
+for _r in _featured:
+    for _name, _ct in CARD_THEMES.items():
+        with open(f"card-{_r['name']}-{_name}.svg", "w", encoding="utf-8", newline="\n") as _f:
+            _f.write(repocards.build_cards([_r], _ct))
+print(f"wrote {len(_featured) * 2} repo cards")
+
+def repo_card(r):
+    n = r["name"]
+    return (f'<a href="https://github.com/{USER}/{n}">'
+            + picture(f"./card-{n}-dark.svg", f"./card-{n}-light.svg", n)
+            + "</a>")
+
+repo_grid = "\n".join(
+    f"  <tr><td>{repo_card(_featured[i])}</td><td>{repo_card(_featured[i+1])}</td></tr>"
+    for i in range(0, len(_featured) - 1, 2)
+)
+
+# --- contact row ---
+LINKS = [
+    ("Website",  "https://danielrltan.com",             "safari"),
+    ("Email",    "mailto:hello@danielrltan.com",        "maildotru"),
+    ("LinkedIn", "https://linkedin.com/in/danielrltan", "linkedin"),
+    ("Twitter",  "https://twitter.com/danielrltan",     "x"),
+]
+
+# One flat badge colour with an accent glyph, so the row reads as a set rather
+# than four competing brand colours.
+def badge(t, label, icon):
+    return (f"https://img.shields.io/badge/{label}-{t['bg']}?style=for-the-badge"
+            f"&logo={icon}&logoColor={t['title']}")
+
+reach = "\n  ".join(
+    f'<a href="{url}">'
+    + picture(badge(DARK, label, icon), badge(LIGHT, label, icon), label)
+    + "</a>"
+    for label, url, icon in LINKS
+)
+
+readme = f"""<p align="center">{hero}</p>
 
 <p align="center">
   {visitors}
   &nbsp;
   {followers}
+</p>
+
+<h3>&rarr;&nbsp; whoami</h3>
+
+<p align="center">{neofetch}</p>
+
+<h3>&rarr;&nbsp; work</h3>
+
+<table align="center">
+{repo_grid}
+</table>
+
+<h3>&rarr;&nbsp; signal</h3>
+
+<p align="center">{activity}</p>
+
+<h3>&rarr;&nbsp; reach</h3>
+
+<p align="center">
+  {reach}
 </p>
 """
 
