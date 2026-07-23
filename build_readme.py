@@ -215,81 +215,97 @@ import render3d
 render3d.main()
 hero = picture("./hero-dark.svg", "./hero-light.svg", "Daniel Tan")
 
-# --- featured repos, rendered locally (see repocards.py) ---
-import repocards
+# --- section furniture: Mac window chrome, stack, buttons, activity ---
+import panels
+import contrib
 
-CARD_THEMES = {
-    "dark":  {"bg": "#0d1117", "card": "#11161d", "border": "#262c36",
-              "accent": "#ff6b35", "text": "#f5e6d3", "dim": "#8b949e"},
-    "light": {"bg": "#ffffff", "card": "#fbfaf9", "border": "#d8d4d0",
-              "accent": "#e2521a", "text": "#3d2817", "dim": "#6a6a6a"},
+PANEL_THEMES = {
+    "dark":  {"bg": "#0d1117", "panel": "#11161d", "chip": "#1b222c",
+              "border": "#2b323d", "accent": "#ff6b35", "text": "#f5e6d3",
+              "dim": "#8b949e", "empty": "#1c222b"},
+    "light": {"bg": "#ffffff", "panel": "#fbfaf9", "chip": "#f1eeea",
+              "border": "#d8d4d0", "accent": "#e2521a", "text": "#3d2817",
+              "dim": "#6a6a6a", "empty": "#eae6e0"},
 }
-# One SVG per repo, so each card stays an independent link.
-_featured = s.get("featured", [])
-for _r in _featured:
-    for _name, _ct in CARD_THEMES.items():
-        with open(f"card-{_r['name']}-{_name}.svg", "w", encoding="utf-8", newline="\n") as _f:
-            _f.write(repocards.build_cards([_r], _ct))
-print(f"wrote {len(_featured) * 2} repo cards")
 
-def repo_card(r):
-    n = r["name"]
-    return (f'<a href="https://github.com/{USER}/{n}">'
-            + picture(f"./card-{n}-dark.svg", f"./card-{n}-light.svg", n)
-            + "</a>")
-
-repo_grid = "\n".join(
-    f"  <tr><td>{repo_card(_featured[i])}</td><td>{repo_card(_featured[i+1])}</td></tr>"
-    for i in range(0, len(_featured) - 1, 2)
-)
-
-# --- contact row ---
-LINKS = [
-    ("Website",  "https://danielrltan.com",             "safari"),
-    ("Email",    "mailto:hello@danielrltan.com",        "maildotru"),
-    ("LinkedIn", "https://linkedin.com/in/danielrltan", "linkedin"),
-    ("Twitter",  "https://twitter.com/danielrltan",     "x"),
+# ---- EDIT ME: what you're actually working on right now ----
+NOW = [
+    ("BROADRIDGE",   "software engineering"),
+    ("WESTERN + IVEY", "computer science & business"),
+    ("REPOHUNT",     "grounded GitHub discovery, as an MCP server"),
+    ("INFINITE-AUTOCLICKER", "cross-platform clicker & macro recorder, in Rust"),
 ]
 
-# One flat badge colour with an accent glyph, so the row reads as a set rather
-# than four competing brand colours.
-def badge(t, label, icon):
-    return (f"https://img.shields.io/badge/{label}-{t['bg']}?style=for-the-badge"
-            f"&logo={icon}&logoColor={t['title']}")
+# ---- EDIT ME: the stack ----
+STACK = [
+    ("LANGUAGES", ["TypeScript", "JavaScript", "Python", "Rust", "CSS"]),
+    ("BUILDING WITH", ["React", "Three.js", "R3F", "GSAP", "Vite", "Node"]),
+    ("TOOLS", ["Git", "VS Code", "Figma"]),
+]
 
-reach = "\n  ".join(
-    f'<a href="{url}">'
-    + picture(badge(DARK, label, icon), badge(LIGHT, label, icon), label)
-    + "</a>"
-    for label, url, icon in LINKS
-)
+CHOOSER = [
+    ("WEBSITE",  "https://danielrltan.com",             "@"),
+    ("EMAIL",    "mailto:hello@danielrltan.com",        "*"),
+    ("LINKEDIN", "https://linkedin.com/in/danielrltan", "in"),
+    ("GITHUB",   f"https://github.com/{USER}",          "/"),
+]
+
+SECTIONS = ["GET INFO", "NOW RUNNING", "EXTENSIONS", "DISK ACTIVITY", "CHOOSER"]
+
+
+def slug(name):
+    return name.lower().replace(" ", "-")
+
+
+def emit(basename, fn):
+    """Write dark+light variants and return the <picture> markup."""
+    for theme_name, th in PANEL_THEMES.items():
+        with open(f"{basename}-{theme_name}.svg", "w",
+                  encoding="utf-8", newline="\n") as fh:
+            fh.write(fn(th))
+    return picture(f"./{basename}-dark.svg", f"./{basename}-light.svg", basename)
+
+
+bars = {name: emit(f"bar-{slug(name)}",
+                   lambda th, n=name: panels.titlebar(n, th))
+        for name in SECTIONS}
+
+now_panel = emit("panel-now", lambda th: panels.now_running(NOW, th))
+stack_panel = emit("panel-stack", lambda th: panels.stack(STACK, th))
+activity_panel = emit(
+    "panel-activity",
+    lambda th: contrib.build(s.get("calendar", []), s.get("calendar_total", 0), th))
+
+buttons = []
+for label, url, glyph in CHOOSER:
+    mk = emit(f"btn-{label.lower()}",
+              lambda th, l=label, g=glyph: panels.button(l, g, th))
+    buttons.append(f'<a href="{url}">{mk}</a>')
+chooser = "\n  ".join(buttons)
+print(f"wrote {(len(SECTIONS) + 3 + len(CHOOSER)) * 2} panel SVGs")
 
 readme = f"""<p align="center">{hero}</p>
 
-<p align="center">
-  {visitors}
-  &nbsp;
-  {followers}
-</p>
-
-<h3>&rarr;&nbsp; whoami</h3>
+<p align="center">{bars['GET INFO']}</p>
 
 <p align="center">{neofetch}</p>
 
-<h3>&rarr;&nbsp; work</h3>
+<p align="center">{bars['NOW RUNNING']}</p>
 
-<table align="center">
-{repo_grid}
-</table>
+<p align="center">{now_panel}</p>
 
-<h3>&rarr;&nbsp; signal</h3>
+<p align="center">{bars['EXTENSIONS']}</p>
 
-<p align="center">{activity}</p>
+<p align="center">{stack_panel}</p>
 
-<h3>&rarr;&nbsp; reach</h3>
+<p align="center">{bars['DISK ACTIVITY']}</p>
+
+<p align="center">{activity_panel}</p>
+
+<p align="center">{bars['CHOOSER']}</p>
 
 <p align="center">
-  {reach}
+  {chooser}
 </p>
 """
 

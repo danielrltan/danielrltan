@@ -11,7 +11,9 @@ on:
       - "build_readme.py"
       - "gather_stats.py"
       - "render3d.py"
-      - "repocards.py"
+      - "panels.py"
+      - "contrib.py"
+      - "offbit.py"
       - "art.txt"
 
 # Allow the workflow to commit the regenerated files back to the repo.
@@ -53,8 +55,12 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # mac-*.png, mac-mesh.json and glyphs.json are baked by hand
+          # (bake_mac_png.py / bake_mesh.py / bake_font.py) and committed, so CI
+          # needs neither numpy, Pillow, fontTools, nor the 3 MB .glb.
           git add stats.json profile-dark.svg profile-light.svg \
-                  hero-dark.svg hero-light.svg card-*.svg README.md
+                  hero-dark.svg hero-light.svg \
+                  bar-*.svg panel-*.svg btn-*.svg README.md
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else

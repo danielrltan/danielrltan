@@ -66,6 +66,25 @@ query {
 """
 cc = json.loads(gh("api", "graphql", "-f", f"query={gql}"))["data"]["viewer"]["contributionsCollection"]
 
+# Daily contribution calendar, for the animated activity panel (contrib.py).
+cal_q = """
+query {
+  viewer {
+    contributionsCollection {
+      contributionCalendar {
+        totalContributions
+        weeks { contributionDays { date contributionCount weekday } }
+      }
+    }
+  }
+}
+"""
+cal = json.loads(gh("api", "graphql", "-f", f"query={cal_q}")) \
+    ["data"]["viewer"]["contributionsCollection"]["contributionCalendar"]
+calendar = [[d["contributionCount"] for d in w["contributionDays"]]
+            for w in cal["weeks"]]
+print(f"calendar: {len(calendar)} weeks, {cal['totalContributions']} contributions")
+
 # Featured repo details, rendered locally by repocards.py. Kept here so the
 # daily workflow refreshes stars/descriptions along with everything else.
 FEATURED = ["Infinite-Autoclicker", "repohunt", "danielrltan.com", "ratemyclubs"]
@@ -84,6 +103,8 @@ for name in FEATURED:
 
 out = {
     "featured": featured,
+    "calendar": calendar,
+    "calendar_total": cal["totalContributions"],
     "languages_top": top,
     "languages_total_bytes": total,
     "followers": user["followers"],
