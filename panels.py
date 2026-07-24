@@ -88,39 +88,56 @@ def now_running(lines, theme, width=BAR_W):
 
 # ---------------------------------------------------------------- stack
 def stack(groups, theme, width=BAR_W):
-    """Tech stack as rows of chips, each carrying its real brand logo."""
+    """Tech stack as centred rows of chips, each carrying its real brand logo."""
     t = theme
-    pad, chip_h, gap, row_gap = 22, 30, 9, 15
+    pad, chip_h, gap, row_gap = 22, 30, 9, 16
     isize, lpad, mid, rpad = 16, 12, 8, 13
-    y = 24
+    maxw = width - 2 * pad
+    y = 26
     body = []
     for title, items in groups:
-        body.append(offbit.text(title, pad, y, 12, t["accent"], style="dot",
-                                tracking=0.12))
-        y += 15
-        x = pad
+        # centred group heading
+        body.append(offbit.text(title, width / 2, y, 12, t["accent"], style="dot",
+                                tracking=0.12, anchor="middle"))
+        y += 17
+        # measure every chip, then greedily pack into rows
+        chips = []
         for name, ikey in items:
-            tw = offbit.measure(name, 13, "bold", 0.02)
             has_icon = icons.has(ikey)
-            w = lpad + (isize + mid if has_icon else 0) + tw + rpad
-            if x + w > width - pad:
-                x = pad
-                y += chip_h + gap
-            body.append(
-                f'<rect x="{x:.0f}" y="{y:.0f}" width="{w:.0f}" height="{chip_h}" '
-                f'rx="5" fill="{t["chip"]}" stroke="{t["border"]}"/>'
-                f'<rect x="{x:.0f}" y="{y:.0f}" width="{w:.0f}" height="2.5" '
-                f'rx="1" fill="{t["accent"]}" opacity=".6"/>'
-            )
-            tx = x + lpad
-            if has_icon:
-                body.append(icons.draw(ikey, x + lpad, y + (chip_h - isize) / 2,
-                                       isize, t["text"]))
-                tx += isize + mid
-            body.append(offbit.text(name, tx, y + chip_h / 2 + 4.5, 13, t["text"],
-                                    style="bold", tracking=0.02))
-            x += w + gap
-        y += chip_h + row_gap
+            w = (lpad + (isize + mid if has_icon else 0)
+                 + offbit.measure(name, 13, "bold", 0.02) + rpad)
+            chips.append((name, ikey, has_icon, w))
+        rows, row, roww = [], [], 0.0
+        for c in chips:
+            step = c[3] + (gap if row else 0)
+            if row and roww + step > maxw:
+                rows.append((row, roww))
+                row, roww = [], 0.0
+                step = c[3]
+            row.append(c)
+            roww += step
+        if row:
+            rows.append((row, roww))
+        # place each row centred on the panel
+        for row, roww in rows:
+            x = (width - roww) / 2
+            for name, ikey, has_icon, w in row:
+                body.append(
+                    f'<rect x="{x:.0f}" y="{y:.0f}" width="{w:.0f}" height="{chip_h}" '
+                    f'rx="5" fill="{t["chip"]}" stroke="{t["border"]}"/>'
+                    f'<rect x="{x:.0f}" y="{y:.0f}" width="{w:.0f}" height="2.5" '
+                    f'rx="1" fill="{t["accent"]}" opacity=".6"/>'
+                )
+                tx = x + lpad
+                if has_icon:
+                    body.append(icons.draw(ikey, x + lpad, y + (chip_h - isize) / 2,
+                                           isize, t["text"]))
+                    tx += isize + mid
+                body.append(offbit.text(name, tx, y + chip_h / 2 + 4.5, 13,
+                                        t["text"], style="bold", tracking=0.02))
+                x += w + gap
+            y += chip_h + gap
+        y += row_gap - gap
     h = int(y + 4)
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{h}" '

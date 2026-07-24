@@ -32,6 +32,10 @@ BRANDS = {
     "git":        "git",
     "figma":      "figma",
     "github":     "github",
+    "docker":     "docker",
+    "vercel":     "vercel",
+    "notion":     "notion",
+    "postman":    "postman",
 }
 
 _D = re.compile(r'\sd="([^"]+)"')

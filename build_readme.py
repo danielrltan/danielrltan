@@ -232,8 +232,6 @@ PANEL_THEMES = {
 NOW = [
     ("BROADRIDGE",   "software engineering"),
     ("WESTERN + IVEY", "computer science & business"),
-    ("REPOHUNT",     "grounded GitHub discovery, as an MCP server"),
-    ("INFINITE-AUTOCLICKER", "cross-platform clicker & macro recorder, in Rust"),
 ]
 
 # ---- EDIT ME: the stack (label, icon key -> icons.py) ----
@@ -242,7 +240,9 @@ STACK = [
                    ("Python", "python"), ("Rust", "rust"), ("CSS", "css")]),
     ("BUILDING WITH", [("React", "react"), ("Three.js", "threejs"),
                        ("GSAP", "gsap"), ("Vite", "vite"), ("Node", "node")]),
-    ("TOOLS", [("Git", "git"), ("VS Code", "vscode"), ("Figma", "figma")]),
+    ("TOOLS", [("Git", "git"), ("GitHub", "github"), ("VS Code", "vscode"),
+               ("Docker", "docker"), ("Figma", "figma"), ("Vercel", "vercel"),
+               ("Notion", "notion"), ("Postman", "postman")]),
 ]
 
 CHOOSER = [

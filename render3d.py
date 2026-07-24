@@ -1,11 +1,11 @@
 """
 render3d.py - the animated hero banner.
 
-The Macintosh is three z-buffered raster bakes (bake_mac_png.py: centre, and a
-gentle turn either side) embedded as data URIs and cross-faded, so it reads as a
-real object turning in place rather than a flat still. Everything around it -
-grid, sun, starfield, type - is vector, drawn here. It also floats via a CSS
-translate; the two motions run on different periods so it never looks looped.
+The Macintosh is a z-buffered turntable (bake_mac_png.py bakes N rotation frames
+into one sprite strip) flipped through with hard cuts via a CSS steps() reel, so
+it genuinely turns in 3D rather than cross-fading between a couple of stills.
+Everything around it - grid, sun, starfield, type - is vector, drawn here. It
+also floats via a CSS translate on a different period, so it never looks looped.
 
 Run:  python render3d.py   ->  hero-dark.svg, hero-light.svg
 """
@@ -25,14 +25,15 @@ CAM_Z = 14.0
 GRID_Y = -3.5
 CELL = 3.0
 
-MAC_X, MAC_Y, MAC_PX = 862, 210, 342      # centre + on-screen size of the machine
+MAC_X, MAC_Y, MAC_PX = 862, 210, 350      # centre + on-screen size of the machine
 SUN_R = 190                               # must out-scale the machine, or the
                                           # sun survives only as an edge sliver
 FRAMES = 48
 DUR = 4.0
 SLICE = 100.0 / FRAMES
 FLOAT_DUR = 7.0
-PAR_DUR = 9.0                             # one centre->left->centre->right cycle
+N_TURN = 28                               # must match bake_mac_png.py
+REEL_DUR = 3.6                            # seconds for one full turntable loop
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -86,6 +87,10 @@ def mac_data_uri(name, suffix=""):
         return "data:image/png;base64," + base64.b64encode(fh.read()).decode("ascii")
 
 
+def mac_strip_uri(name):
+    return mac_data_uri(name, "-strip")
+
+
 THEMES = {
     "dark": {
         "bg": "#0d1117", "accent": "#ff6b35", "text": "#ffffff",
@@ -113,19 +118,16 @@ def build(theme, name):
     @media (prefers-reduced-motion:reduce){{
       .f{{animation:none}}.f0{{opacity:1}}.tw{{animation:none;opacity:.6}}
       .hover,.shad{{animation:none}}
-      .mac{{animation:none}}.mc{{opacity:1}}
+      .reel{{animation:none}}
     }}
     .hover{{animation:hov {FLOAT_DUR}s ease-in-out infinite}}
     @keyframes hov{{0%,100%{{transform:translateY(0)}}50%{{transform:translateY(-17px)}}}}
-    /* Three baked poses cross-fade so the machine turns in place (real 3D)
-       instead of a flat image being rotated. */
-    .mac{{opacity:0}}
-    .mc{{animation:mc {PAR_DUR}s ease-in-out infinite}}
-    .ml{{animation:ml {PAR_DUR}s ease-in-out infinite}}
-    .mr{{animation:mr {PAR_DUR}s ease-in-out infinite}}
-    @keyframes mc{{0%{{opacity:1}}25%{{opacity:0}}50%{{opacity:1}}75%{{opacity:0}}100%{{opacity:1}}}}
-    @keyframes ml{{0%,50%,100%{{opacity:0}}25%{{opacity:1}}}}
-    @keyframes mr{{0%,50%,100%{{opacity:0}}75%{{opacity:1}}}}
+    /* Turntable: a sprite strip of {N_TURN} baked rotation frames flipped with
+       HARD CUTS (steps), so it actually turns in 3D. translateX by exactly one
+       frame per step; the sine loop makes frame {N_TURN}==frame 0, so it wraps
+       seamlessly. reduced-motion freezes on frame 0 (the centre pose). */
+    .reel{{animation:reel {REEL_DUR}s steps({N_TURN}) infinite}}
+    @keyframes reel{{to{{transform:translateX(-{MAC_PX*N_TURN}px)}}}}
     .shad{{animation:shd {FLOAT_DUR}s ease-in-out infinite}}
     @keyframes shd{{0%,100%{{opacity:.42;transform:scale(1)}}
                    50%{{opacity:.24;transform:scale(.86)}}}}
@@ -164,13 +166,17 @@ def build(theme, name):
     grid.append(f'<rect x="0" y="{CY}" width="{W}" height="{H-CY}" fill="url(#fade)"/>')
 
     half = MAC_PX / 2
-    frames = "".join(
-        f'<image class="mac {cls}" href="{mac_data_uri(name, suf)}" '
-        f'x="{MAC_X-half:.0f}" y="{MAC_Y-half:.0f}" '
-        f'width="{MAC_PX}" height="{MAC_PX}"/>'
-        for suf, cls in (("", "mc"), ("-l", "ml"), ("-r", "mr"))
+    winx, winy = MAC_X - half, MAC_Y - half
+    machine = (
+        f'<g class="hover">'
+        f'<clipPath id="macwin"><rect x="{winx:.0f}" y="{winy:.0f}" '
+        f'width="{MAC_PX}" height="{MAC_PX}"/></clipPath>'
+        f'<g clip-path="url(#macwin)">'
+        f'<image class="reel" href="{mac_strip_uri(name)}" '
+        f'x="{winx:.0f}" y="{winy:.0f}" '
+        f'width="{MAC_PX*N_TURN}" height="{MAC_PX}"/>'
+        f'</g></g>'
     )
-    machine = f'<g class="hover">{frames}</g>'
     shadow = (f'<ellipse class="shad" cx="{MAC_X}" cy="{CY+92}" rx="126" ry="20" '
               f'fill="url(#shadow)"/>')
 

@@ -26,15 +26,19 @@ import numpy as np
 from PIL import Image
 
 SS = 2                      # supersample factor
-W = H = 620                 # final size (so the buffer is 1240px)
+W = H = 340                 # per-frame square, final px (buffer is 680px)
 YAW, PITCH, ROLL = -28.0, 12.0, -14.0
 FOCAL, CAM_Z = 900.0, 9.0
-MODEL_PX = 430              # on-screen height of the model, pre-supersample
+MODEL_PX = 230              # machine height in-frame; leaves margin for the turn
 LIGHT = (-0.45, 0.72, 0.62)
 
-# Subtle turn either side of centre. Only yaw changes, so the machine looks
-# like it's rotating in place - enough to expose depth, not a spin.
-POSES = {"": 0.0, "-l": 11.0, "-r": -11.0}
+# A real turntable: N frames of a smooth yaw oscillation, tiled into one
+# horizontal sprite strip. render3d flips through them with hard cuts (CSS
+# steps()), NOT a cross-fade - a cross-fade of a few poses just looks like
+# dithering; a dense hard-cut flipbook actually looks like it's turning.
+# yaw = AMP*sin(2pi i/N) is a seamless loop (frame N == frame 0).
+N_TURN = 28
+AMP = 20.0
 
 THEMES = {
     "dark":  {"body": "#e8e4d9", "accent": "#ff6b35", "crt": "#120c06",
@@ -163,12 +167,18 @@ def main():
     is_scr = np.array(mesh["tri_screen"], dtype=bool)
 
     for name, th in THEMES.items():
-        for suffix, yaw in POSES.items():
+        strip = Image.new("RGBA", (W * N_TURN, H), (0, 0, 0, 0))
+        for i in range(N_TURN):
+            yaw = AMP * math.sin(2 * math.pi * i / N_TURN)
             img = render(verts, tris, luma, is_scr, th, yaw)
-            out = Image.fromarray(img, "RGBA").resize((W, H), Image.LANCZOS)
-            path = f"mac-{name}{suffix}.png"
-            out.save(path, optimize=True)
-            print(f"wrote {path}  {W}x{H}  {os.path.getsize(path)/1024:.0f} KB")
+            frame = Image.fromarray(img, "RGBA").resize((W, H), Image.LANCZOS)
+            strip.paste(frame, (i * W, 0))
+            if i == 0:                       # centre pose = reduced-motion still
+                frame.save(f"mac-{name}.png", optimize=True)
+        path = f"mac-{name}-strip.png"
+        strip.save(path, optimize=True)
+        print(f"wrote {path}  {W*N_TURN}x{H}  {os.path.getsize(path)/1024:.0f} KB "
+              f"({N_TURN} frames)")
 
 
 if __name__ == "__main__":
