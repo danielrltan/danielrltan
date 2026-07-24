@@ -2,12 +2,13 @@
 panels.py - the section furniture, drawn as classic Mac OS window chrome.
 
 The whole README is framed as a desktop: every section is a window title bar
-(pinstripes, close box, zoom box), the stack is a row of disk icons, and the
-contact links are chunky beveled buttons. Section names borrow the System 6/7
-vocabulary - GET INFO, NOW RUNNING, EXTENSIONS, DISK ACTIVITY, CHOOSER - which
-keeps the whole page inside one metaphor instead of generic labels.
+(pinstripes, close box, zoom box), the stack is a row of chips carrying real
+brand logos, and the contact links are chunky beveled buttons. Section labels
+are plain words (About, Now, Stack, Contributions, Reach), each fronted by a
+small icon, so the Mac styling carries the theme without cryptic names.
 """
 
+import icons
 import offbit
 
 BAR_W, BAR_H = 880, 34
@@ -23,7 +24,7 @@ def _shade(h, k):
 
 
 # ---------------------------------------------------------------- title bars
-def titlebar(label, theme, width=BAR_W):
+def titlebar(label, theme, icon=None, width=BAR_W):
     """A System-6 style window title bar: pinstripes, close box, zoom box."""
     t = theme
     h = BAR_H
@@ -32,8 +33,15 @@ def titlebar(label, theme, width=BAR_W):
         f'fill="{t["accent"]}" opacity=".55"/>'
         for i in range(7)
     )
-    tw = offbit.measure(label, 15, "bold", 0.08) + 30
-    plate_x = (width - tw) / 2
+    # centre the icon + label as one group so the plate stays symmetric
+    isize, gap = 17, 9
+    text_w = offbit.measure(label, 15, "bold", 0.08)
+    group_w = (isize + gap + text_w) if icon else text_w
+    gx = (width - group_w) / 2
+    plate_w = group_w + 34
+    glyph = (icons.draw(icon, gx, h / 2 - isize / 2, isize, t["accent"])
+             if icon else "")
+    tx = gx + (isize + gap if icon else 0)
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{h}" '
         f'viewBox="0 0 {width} {h}" role="img" aria-label="{label}">'
@@ -47,10 +55,11 @@ def titlebar(label, theme, width=BAR_W):
         f'fill="{t["panel"]}" stroke="{t["border"]}"/>'
         f'<rect x="{width-22}" y="{h/2-3.5}" width="7" height="7" '
         f'fill="none" stroke="{t["border"]}"/>'
-        # title plate interrupts the stripes
-        f'<rect x="{plate_x:.0f}" y="0" width="{tw:.0f}" height="{h}" '
+        # plate interrupts the stripes behind the icon + label
+        f'<rect x="{(width-plate_w)/2:.0f}" y="0" width="{plate_w:.0f}" height="{h}" '
         f'fill="{t["panel"]}"/>'
-        f'{offbit.text(label, width/2, h/2 + 5.5, 15, t["text"], style="bold", tracking=0.08, anchor="middle")}'
+        f'{glyph}'
+        f'{offbit.text(label, tx, h/2 + 5.5, 15, t["text"], style="bold", tracking=0.08)}'
         f'</svg>\n'
     )
 
@@ -79,32 +88,40 @@ def now_running(lines, theme, width=BAR_W):
 
 # ---------------------------------------------------------------- stack
 def stack(groups, theme, width=BAR_W):
-    """Tech stack as rows of labelled chips, grouped by role."""
+    """Tech stack as rows of chips, each carrying its real brand logo."""
     t = theme
-    pad, chip_h, gap, row_gap = 22, 26, 8, 16
-    y = 26
+    pad, chip_h, gap, row_gap = 22, 30, 9, 15
+    isize, lpad, mid, rpad = 16, 12, 8, 13
+    y = 24
     body = []
     for title, items in groups:
         body.append(offbit.text(title, pad, y, 12, t["accent"], style="dot",
                                 tracking=0.12))
-        y += 14
+        y += 15
         x = pad
-        for name in items:
-            w = offbit.measure(name, 13, "bold", 0.02) + 22
+        for name, ikey in items:
+            tw = offbit.measure(name, 13, "bold", 0.02)
+            has_icon = icons.has(ikey)
+            w = lpad + (isize + mid if has_icon else 0) + tw + rpad
             if x + w > width - pad:
                 x = pad
                 y += chip_h + gap
             body.append(
                 f'<rect x="{x:.0f}" y="{y:.0f}" width="{w:.0f}" height="{chip_h}" '
-                f'rx="4" fill="{t["chip"]}" stroke="{t["border"]}"/>'
+                f'rx="5" fill="{t["chip"]}" stroke="{t["border"]}"/>'
                 f'<rect x="{x:.0f}" y="{y:.0f}" width="{w:.0f}" height="2.5" '
                 f'rx="1" fill="{t["accent"]}" opacity=".6"/>'
             )
-            body.append(offbit.text(name, x + w / 2, y + 18, 13, t["text"],
-                                    style="bold", tracking=0.02, anchor="middle"))
+            tx = x + lpad
+            if has_icon:
+                body.append(icons.draw(ikey, x + lpad, y + (chip_h - isize) / 2,
+                                       isize, t["text"]))
+                tx += isize + mid
+            body.append(offbit.text(name, tx, y + chip_h / 2 + 4.5, 13, t["text"],
+                                    style="bold", tracking=0.02))
             x += w + gap
         y += chip_h + row_gap
-    h = int(y + 6)
+    h = int(y + 4)
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{h}" '
         f'viewBox="0 0 {width} {h}" role="img" aria-label="Tech stack">'
@@ -114,7 +131,7 @@ def stack(groups, theme, width=BAR_W):
 
 
 # ---------------------------------------------------------------- chooser
-def button(label, glyph, theme, width=196, height=62):
+def button(label, icon, theme, width=196, height=62):
     """A chunky beveled Mac button. Individually linkable, so each is its own SVG."""
     t = theme
     bevel = _shade(t["chip"], 1.35)
@@ -124,6 +141,7 @@ def button(label, glyph, theme, width=196, height=62):
     css = ("@keyframes pl{0%,100%{opacity:.03}50%{opacity:.16}}"
            ".g{animation:pl 3.4s ease-in-out infinite}"
            "@media (prefers-reduced-motion:reduce){.g{animation:none;opacity:.08}}")
+    isize = 21
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
         f'viewBox="0 0 {width} {height}" role="img" aria-label="{label}">'
@@ -134,7 +152,7 @@ def button(label, glyph, theme, width=196, height=62):
         f'<rect x="7" y="5" width="{width-14}" height="2" rx="1" fill="{bevel}"/>'
         f'<rect class="g" x="3" y="2" width="{width-6}" height="{height-9}" rx="9" '
         f'fill="{t["accent"]}"/>'
-        f'{offbit.text(glyph, 22, height/2 + 3, 19, t["accent"], style="bold")}'
-        f'{offbit.text(label, 54, height/2 + 3, 15, t["text"], style="bold", tracking=0.05)}'
+        f'{icons.draw(icon, 18, (height-9)/2 + 2 - isize/2, isize, t["accent"])}'
+        f'{offbit.text(label, 50, height/2 + 3, 15, t["text"], style="bold", tracking=0.05)}'
         f'</svg>\n'
     )

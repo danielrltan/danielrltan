@@ -236,21 +236,30 @@ NOW = [
     ("INFINITE-AUTOCLICKER", "cross-platform clicker & macro recorder, in Rust"),
 ]
 
-# ---- EDIT ME: the stack ----
+# ---- EDIT ME: the stack (label, icon key -> icons.py) ----
 STACK = [
-    ("LANGUAGES", ["TypeScript", "JavaScript", "Python", "Rust", "CSS"]),
-    ("BUILDING WITH", ["React", "Three.js", "R3F", "GSAP", "Vite", "Node"]),
-    ("TOOLS", ["Git", "VS Code", "Figma"]),
+    ("LANGUAGES", [("TypeScript", "typescript"), ("JavaScript", "javascript"),
+                   ("Python", "python"), ("Rust", "rust"), ("CSS", "css")]),
+    ("BUILDING WITH", [("React", "react"), ("Three.js", "threejs"),
+                       ("GSAP", "gsap"), ("Vite", "vite"), ("Node", "node")]),
+    ("TOOLS", [("Git", "git"), ("VS Code", "vscode"), ("Figma", "figma")]),
 ]
 
 CHOOSER = [
-    ("WEBSITE",  "https://danielrltan.com",             "@"),
-    ("EMAIL",    "mailto:hello@danielrltan.com",        "*"),
-    ("LINKEDIN", "https://linkedin.com/in/danielrltan", "in"),
-    ("GITHUB",   f"https://github.com/{USER}",          "/"),
+    ("WEBSITE",  "https://danielrltan.com",             "website"),
+    ("EMAIL",    "mailto:hello@danielrltan.com",        "email"),
+    ("LINKEDIN", "https://linkedin.com/in/danielrltan", "linkedin"),
+    ("GITHUB",   f"https://github.com/{USER}",          "github"),
 ]
 
-SECTIONS = ["GET INFO", "NOW RUNNING", "EXTENSIONS", "DISK ACTIVITY", "CHOOSER"]
+# (label, header icon key). Plain words, not System-6 jargon.
+SECTIONS = [
+    ("ABOUT",         "about"),
+    ("NOW",           "now"),
+    ("STACK",         "stack"),
+    ("CONTRIBUTIONS", "contrib"),
+    ("REACH",         "reach"),
+]
 
 
 def slug(name):
@@ -266,9 +275,9 @@ def emit(basename, fn):
     return picture(f"./{basename}-dark.svg", f"./{basename}-light.svg", basename)
 
 
-bars = {name: emit(f"bar-{slug(name)}",
-                   lambda th, n=name: panels.titlebar(n, th))
-        for name in SECTIONS}
+bars = {label: emit(f"bar-{slug(label)}",
+                    lambda th, l=label, ic=icon: panels.titlebar(l, th, ic))
+        for label, icon in SECTIONS}
 
 now_panel = emit("panel-now", lambda th: panels.now_running(NOW, th))
 stack_panel = emit("panel-stack", lambda th: panels.stack(STACK, th))
@@ -277,36 +286,28 @@ activity_panel = emit(
     lambda th: contrib.build(s.get("calendar", []), s.get("calendar_total", 0), th))
 
 buttons = []
-for label, url, glyph in CHOOSER:
+for label, url, icon in CHOOSER:
     mk = emit(f"btn-{label.lower()}",
-              lambda th, l=label, g=glyph: panels.button(l, g, th))
+              lambda th, l=label, ic=icon: panels.button(l, ic, th))
+    # No whitespace between the anchors: a newline here renders as a linked
+    # gap on GitHub (the stray blue tick between buttons).
     buttons.append(f'<a href="{url}">{mk}</a>')
-chooser = "\n  ".join(buttons)
+chooser = "".join(buttons)
 print(f"wrote {(len(SECTIONS) + 3 + len(CHOOSER)) * 2} panel SVGs")
 
+# Each title bar rides directly above its own panel inside one centered block,
+# so the page reads as coupled sections instead of floating strips.
 readme = f"""<p align="center">{hero}</p>
 
-<p align="center">{bars['GET INFO']}</p>
+<p align="center">{bars['ABOUT']}<br />{neofetch}</p>
 
-<p align="center">{neofetch}</p>
+<p align="center">{bars['NOW']}<br />{now_panel}</p>
 
-<p align="center">{bars['NOW RUNNING']}</p>
+<p align="center">{bars['STACK']}<br />{stack_panel}</p>
 
-<p align="center">{now_panel}</p>
+<p align="center">{bars['CONTRIBUTIONS']}<br />{activity_panel}</p>
 
-<p align="center">{bars['EXTENSIONS']}</p>
-
-<p align="center">{stack_panel}</p>
-
-<p align="center">{bars['DISK ACTIVITY']}</p>
-
-<p align="center">{activity_panel}</p>
-
-<p align="center">{bars['CHOOSER']}</p>
-
-<p align="center">
-  {chooser}
-</p>
+<p align="center">{bars['REACH']}<br />{chooser}</p>
 """
 
 with open("README.md", "w", encoding="utf-8", newline="\n") as f:

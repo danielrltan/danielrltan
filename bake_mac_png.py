@@ -1,8 +1,10 @@
 """
 bake_mac_png.py - LOCAL-ONLY build step.
 
-Rasterises the Macintosh mesh with a real z-buffer and writes mac-<theme>.png
-(transparent background, 2x supersampled).
+Rasterises the Macintosh mesh with a real z-buffer and writes three poses per
+theme - mac-<theme>.png (centre), mac-<theme>-l.png, mac-<theme>-r.png - each a
+transparent 2x-supersampled PNG. render3d.py cross-fades the three so the
+machine gently turns and reads as genuine 3D instead of a flat still.
 
 Why not SVG polygons: this mesh has interpenetrating and coincident surfaces
 (CRT glass sitting inside the bezel, case interior behind it). A painter's
@@ -30,6 +32,10 @@ FOCAL, CAM_Z = 900.0, 9.0
 MODEL_PX = 430              # on-screen height of the model, pre-supersample
 LIGHT = (-0.45, 0.72, 0.62)
 
+# Subtle turn either side of centre. Only yaw changes, so the machine looks
+# like it's rotating in place - enough to expose depth, not a spin.
+POSES = {"": 0.0, "-l": 11.0, "-r": -11.0}
+
 THEMES = {
     "dark":  {"body": "#e8e4d9", "accent": "#ff6b35", "crt": "#120c06",
               "glow": "#ff9d3c"},
@@ -53,16 +59,12 @@ def rot(p, yaw, pitch, roll):
     return np.stack([x, y, z], axis=1)
 
 
-def main():
-    mesh = json.load(open("mac-mesh.json", encoding="utf-8"))
-    verts = np.array(mesh["verts"], dtype=np.float64)
-    tris = np.array(mesh["tris"], dtype=np.int32)
-    luma = np.array(mesh["tri_luma"], dtype=np.float64)
-    is_scr = np.array(mesh["tri_screen"], dtype=bool)
-
+def render(verts, tris, luma, is_scr, th, yaw_deg):
+    """Rasterise one pose of one theme; return an RGBA uint8 (H, W, 4) array."""
     bw, bh = W * SS, H * SS
     world = (MODEL_PX * SS) / (FOCAL * SS / CAM_Z)
-    P = rot(verts * world, math.radians(YAW), math.radians(PITCH), math.radians(ROLL))
+    P = rot(verts * world, math.radians(YAW + yaw_deg),
+            math.radians(PITCH), math.radians(ROLL))
 
     depth = CAM_Z - P[:, 2]
     depth = np.maximum(depth, 0.15)
@@ -77,7 +79,7 @@ def main():
     L = np.array(LIGHT, dtype=np.float64)
     L /= np.linalg.norm(L)
 
-    for name, th in THEMES.items():
+    if True:
         body, acc, crt = hexrgb(th["body"]), hexrgb(th["accent"]), hexrgb(th["crt"])
         glow = hexrgb(th["glow"])
 
@@ -150,11 +152,23 @@ def main():
         img = np.zeros((bh, bw, 4), dtype=np.uint8)
         img[..., :3] = np.clip(rgb, 0, 255).astype(np.uint8)
         img[..., 3] = np.where(alpha, 255, 0).astype(np.uint8)
-        out = Image.fromarray(img, "RGBA").resize((W, H), Image.LANCZOS)
-        path = f"mac-{name}.png"
-        out.save(path, optimize=True)
-        print(f"wrote {path}  {W}x{H}  {os.path.getsize(path)/1024:.0f} KB  "
-              f"({int(front.sum()):,} front faces)")
+        return img
+
+
+def main():
+    mesh = json.load(open("mac-mesh.json", encoding="utf-8"))
+    verts = np.array(mesh["verts"], dtype=np.float64)
+    tris = np.array(mesh["tris"], dtype=np.int32)
+    luma = np.array(mesh["tri_luma"], dtype=np.float64)
+    is_scr = np.array(mesh["tri_screen"], dtype=bool)
+
+    for name, th in THEMES.items():
+        for suffix, yaw in POSES.items():
+            img = render(verts, tris, luma, is_scr, th, yaw)
+            out = Image.fromarray(img, "RGBA").resize((W, H), Image.LANCZOS)
+            path = f"mac-{name}{suffix}.png"
+            out.save(path, optimize=True)
+            print(f"wrote {path}  {W}x{H}  {os.path.getsize(path)/1024:.0f} KB")
 
 
 if __name__ == "__main__":

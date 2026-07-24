@@ -16,7 +16,7 @@ DX, DY = -5.0, 8.0  # per weekday, down-and-left
 CW, CD = 11.0, 6.6  # bar footprint (inset from the cell for a visible gap)
 MAXH = 66.0        # tallest bar
 PAD_L, PAD_T = 40, 30
-WAVE = 5.0         # seconds for one sweep
+SWEEP = 1.8        # seconds for the build to sweep left-to-right across weeks
 
 
 def _lerp(a, b, t):
@@ -32,10 +32,29 @@ def _css(rgb, k=1.0):
         max(0, min(255, int(c * k))) for c in rgb)
 
 
+def _streaks(flat):
+    """(current, active-days) from a chronological day list.
+
+    Trailing zeros are treated as future/not-yet padding so an empty 'today'
+    doesn't zero out a streak that really runs up to the last active day.
+    """
+    end = len(flat)
+    while end > 0 and flat[end - 1] == 0:
+        end -= 1
+    current = 0
+    i = end - 1
+    while i >= 0 and flat[i] > 0:
+        current += 1
+        i -= 1
+    active = sum(1 for v in flat if v > 0)
+    return current, active
+
+
 def build(calendar, total, theme):
     weeks = len(calendar)
     flat = [v for w in calendar for v in w]
     peak = max(flat) or 1
+    current, active = _streaks(flat)
 
     W = int(PAD_L * 2 + weeks * WK + abs(DX) * 7)
     H = int(PAD_T + MAXH + 7 * DY + 58)
@@ -77,7 +96,7 @@ def build(calendar, total, theme):
     body = []
     for wi in sorted(cols):
         parts = [s for _, s in sorted(cols[wi], key=lambda p: p[0])]
-        delay = (wi / max(weeks - 1, 1)) * WAVE
+        delay = (wi / max(weeks - 1, 1)) * SWEEP
         body.append(f'<g class="c" style="animation-delay:{delay:.2f}s">'
                     f'{"".join(parts)}</g>')
 
@@ -88,15 +107,21 @@ def build(calendar, total, theme):
         ticks.append(f'<rect x="{tx:.0f}" y="{H-30}" width="1" height="5" '
                      f'fill="{theme["dim"]}" opacity=".5"/>')
 
-    legend = offbit.text(f"{total} CONTRIBUTIONS  /  PEAK {peak} IN A DAY",
-                         PAD_L, H - 14, 12.5, theme["dim"], style="dot", tracking=0.06)
+    legend = offbit.text(
+        f"{total} CONTRIBUTIONS  /  {current} DAY STREAK  /  {active} ACTIVE DAYS",
+        PAD_L, H - 14, 12.5, theme["dim"], style="dot", tracking=0.06)
     scale = offbit.text("52 WEEKS", W - PAD_L, H - 14, 12.5, theme["dim"],
                         style="dot", tracking=0.06, anchor="end")
 
+    # The city builds once on load: each column rises up into place, swept
+    # left-to-right by the per-column delay, then SETTLES (fill: both). We
+    # animate only the transform, never opacity - so the bars are always
+    # painted (a still capture or a renderer that skips the animation just sees
+    # them in place), the panel is never blank.
     css = f"""
-    .c{{animation:wv {WAVE}s linear infinite}}
-    @keyframes wv{{0%,100%{{opacity:.72}}6%{{opacity:1}}14%{{opacity:.72}}}}
-    @media (prefers-reduced-motion:reduce){{.c{{animation:none;opacity:.9}}}}
+    .c{{animation:rise .85s cubic-bezier(.2,.75,.2,1) both}}
+    @keyframes rise{{from{{transform:translateY(20px)}}to{{transform:translateY(0)}}}}
+    @media (prefers-reduced-motion:reduce){{.c{{animation:none}}}}
     """
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" '

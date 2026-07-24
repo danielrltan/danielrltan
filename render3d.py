@@ -1,10 +1,11 @@
 """
 render3d.py - the animated hero banner.
 
-The Macintosh itself is a z-buffered raster bake (bake_mac_png.py) embedded as a
-data URI; everything around it - grid, sun, starfield, type - is vector, drawn
-here. The machine FLOATS via SMIL transforms rather than a baked rotation
-flipbook: a spin reads as a novelty, a slow hover reads as a product shot.
+The Macintosh is three z-buffered raster bakes (bake_mac_png.py: centre, and a
+gentle turn either side) embedded as data URIs and cross-faded, so it reads as a
+real object turning in place rather than a flat still. Everything around it -
+grid, sun, starfield, type - is vector, drawn here. It also floats via a CSS
+translate; the two motions run on different periods so it never looks looped.
 
 Run:  python render3d.py   ->  hero-dark.svg, hero-light.svg
 """
@@ -31,6 +32,7 @@ FRAMES = 48
 DUR = 4.0
 SLICE = 100.0 / FRAMES
 FLOAT_DUR = 7.0
+PAR_DUR = 9.0                             # one centre->left->centre->right cycle
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -79,8 +81,8 @@ def starfield(t):
     return "".join(out)
 
 
-def mac_data_uri(name):
-    with open(os.path.join(_HERE, f"mac-{name}.png"), "rb") as fh:
+def mac_data_uri(name, suffix=""):
+    with open(os.path.join(_HERE, f"mac-{name}{suffix}.png"), "rb") as fh:
         return "data:image/png;base64," + base64.b64encode(fh.read()).decode("ascii")
 
 
@@ -111,11 +113,19 @@ def build(theme, name):
     @media (prefers-reduced-motion:reduce){{
       .f{{animation:none}}.f0{{opacity:1}}.tw{{animation:none;opacity:.6}}
       .hover,.shad{{animation:none}}
+      .mac{{animation:none}}.mc{{opacity:1}}
     }}
     .hover{{animation:hov {FLOAT_DUR}s ease-in-out infinite}}
     @keyframes hov{{0%,100%{{transform:translateY(0)}}50%{{transform:translateY(-17px)}}}}
-    .tilt{{animation:tlt {FLOAT_DUR}s ease-in-out infinite;transform-origin:{MAC_X}px {MAC_Y}px}}
-    @keyframes tlt{{0%,100%{{transform:rotate(-1.1deg)}}50%{{transform:rotate(1.1deg)}}}}
+    /* Three baked poses cross-fade so the machine turns in place (real 3D)
+       instead of a flat image being rotated. */
+    .mac{{opacity:0}}
+    .mc{{animation:mc {PAR_DUR}s ease-in-out infinite}}
+    .ml{{animation:ml {PAR_DUR}s ease-in-out infinite}}
+    .mr{{animation:mr {PAR_DUR}s ease-in-out infinite}}
+    @keyframes mc{{0%{{opacity:1}}25%{{opacity:0}}50%{{opacity:1}}75%{{opacity:0}}100%{{opacity:1}}}}
+    @keyframes ml{{0%,50%,100%{{opacity:0}}25%{{opacity:1}}}}
+    @keyframes mr{{0%,50%,100%{{opacity:0}}75%{{opacity:1}}}}
     .shad{{animation:shd {FLOAT_DUR}s ease-in-out infinite}}
     @keyframes shd{{0%,100%{{opacity:.42;transform:scale(1)}}
                    50%{{opacity:.24;transform:scale(.86)}}}}
@@ -154,25 +164,24 @@ def build(theme, name):
     grid.append(f'<rect x="0" y="{CY}" width="{W}" height="{H-CY}" fill="url(#fade)"/>')
 
     half = MAC_PX / 2
-    machine = (
-        f'<g class="hover"><g class="tilt">'
-        f'<image href="{mac_data_uri(name)}" x="{MAC_X-half:.0f}" y="{MAC_Y-half:.0f}" '
-        f'width="{MAC_PX}" height="{MAC_PX}"/></g></g>'
+    frames = "".join(
+        f'<image class="mac {cls}" href="{mac_data_uri(name, suf)}" '
+        f'x="{MAC_X-half:.0f}" y="{MAC_Y-half:.0f}" '
+        f'width="{MAC_PX}" height="{MAC_PX}"/>'
+        for suf, cls in (("", "mc"), ("-l", "ml"), ("-r", "mr"))
     )
+    machine = f'<g class="hover">{frames}</g>'
     shadow = (f'<ellipse class="shad" cx="{MAC_X}" cy="{CY+92}" rx="126" ry="20" '
               f'fill="url(#shadow)"/>')
 
     title = (
-        offbit.text("DANIEL TAN", 74, 178, 60, t["accent"], style="bold", opacity=".42")
-        + offbit.text("DANIEL TAN", 68, 172, 60, t["text"], style="bold")
-        + offbit.text("DESIGNER  x  SOFTWARE ENGINEER", 70, 208, 15,
+        offbit.text("DANIEL TAN", 76, 164, 104, t["accent"], style="bold", opacity=".42")
+        + offbit.text("DANIEL TAN", 70, 158, 104, t["text"], style="bold")
+        + offbit.text("DESIGNER  x  SOFTWARE ENGINEER", 72, 200, 16,
                       t["dim"], style="regular", tracking=0.06)
     )
-    meta = "".join(
-        offbit.text(s, 70, 268 + i * 21, 12.5, t["dim"], style="dot", tracking=0.05)
-        for i, s in enumerate(("MACINTOSH 128K / SOFTWARE 3D",
-                               "TORONTO - ONTARIO"))
-    )
+    meta = offbit.text("TORONTO - ONTARIO", 72, 236, 12.5,
+                       t["dim"], style="dot", tracking=0.05)
 
     B, M = 26, 22
     corners = "".join(
