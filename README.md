@@ -38,16 +38,4 @@
 <p align="center"><picture>
   <source media="(prefers-color-scheme: dark)" srcset="./bar-reach-dark.svg">
   <img alt="bar-reach" src="./bar-reach-light.svg">
-</picture><br /><a href="https://danielrltan.com"><picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./btn-website-dark.svg">
-  <img alt="btn-website" src="./btn-website-light.svg">
-</picture></a><a href="mailto:hello@danielrltan.com"><picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./btn-email-dark.svg">
-  <img alt="btn-email" src="./btn-email-light.svg">
-</picture></a><a href="https://linkedin.com/in/danielrltan"><picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./btn-linkedin-dark.svg">
-  <img alt="btn-linkedin" src="./btn-linkedin-light.svg">
-</picture></a><a href="https://github.com/danielrltan"><picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./btn-github-dark.svg">
-  <img alt="btn-github" src="./btn-github-light.svg">
-</picture></a></p>
+</picture><br /><a href="https://danielrltan.com"><img alt="btn-website" src="./btn-website.svg"></a><a href="mailto:hello@danielrltan.com"><img alt="btn-email" src="./btn-email.svg"></a><a href="https://linkedin.com/in/danielrltan"><img alt="btn-linkedin" src="./btn-linkedin.svg"></a><a href="https://github.com/danielrltan"><img alt="btn-github" src="./btn-github.svg"></a></p>

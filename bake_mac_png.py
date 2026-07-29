@@ -37,7 +37,7 @@ LIGHT = (-0.45, 0.72, 0.62)
 # steps()), NOT a cross-fade - a cross-fade of a few poses just looks like
 # dithering; a dense hard-cut flipbook actually looks like it's turning.
 # yaw = AMP*sin(2pi i/N) is a seamless loop (frame N == frame 0).
-N_TURN = 28
+N_TURN = 72
 AMP = 20.0
 
 THEMES = {

@@ -148,14 +148,25 @@ def stack(groups, theme, width=BAR_W):
 
 
 # ---------------------------------------------------------------- chooser
-def button(label, icon, theme, width=196, height=62):
-    """A chunky beveled Mac button. Individually linkable, so each is its own SVG."""
-    t = theme
-    bevel = _shade(t["chip"], 1.35)
-    shadow = _shade(t["chip"], 0.55)
+def button(label, icon, themes, width=196, height=62):
+    """A chunky beveled Mac button. Individually linkable, so each is its own SVG.
+
+    Unlike the bars/panels, this is ONE self-theming SVG carrying both palettes
+    behind a prefers-color-scheme media query. GitHub wraps every <picture> in
+    its themed-picture element, whose image renders block-level - four
+    picture-based buttons can never share a row. A plain <img> stays inline,
+    so the theme switch has to live inside the SVG instead.
+    """
+    def vars_css(t):
+        return (f"--chip:{t['chip']};--border:{t['border']};"
+                f"--accent:{t['accent']};--text:{t['text']};"
+                f"--bevel:{_shade(t['chip'], 1.35)};"
+                f"--shadow:{_shade(t['chip'], 0.55)}")
     # A faint breathing sheen. Anything stronger floods the whole face with
     # accent and the button stops reading as a button.
-    css = ("@keyframes pl{0%,100%{opacity:.03}50%{opacity:.16}}"
+    css = (f":root{{{vars_css(themes['light'])}}}"
+           f"@media (prefers-color-scheme:dark){{:root{{{vars_css(themes['dark'])}}}}}"
+           "@keyframes pl{0%,100%{opacity:.03}50%{opacity:.16}}"
            ".g{animation:pl 3.4s ease-in-out infinite}"
            "@media (prefers-reduced-motion:reduce){.g{animation:none;opacity:.08}}")
     isize = 21
@@ -163,13 +174,13 @@ def button(label, icon, theme, width=196, height=62):
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
         f'viewBox="0 0 {width} {height}" role="img" aria-label="{label}">'
         f'<style>{css}</style>'
-        f'<rect x="3" y="4" width="{width-6}" height="{height-7}" rx="9" fill="{shadow}"/>'
+        f'<rect x="3" y="4" width="{width-6}" height="{height-7}" rx="9" fill="var(--shadow)"/>'
         f'<rect x="3" y="2" width="{width-6}" height="{height-9}" rx="9" '
-        f'fill="{t["chip"]}" stroke="{t["border"]}"/>'
-        f'<rect x="7" y="5" width="{width-14}" height="2" rx="1" fill="{bevel}"/>'
+        f'fill="var(--chip)" stroke="var(--border)"/>'
+        f'<rect x="7" y="5" width="{width-14}" height="2" rx="1" fill="var(--bevel)"/>'
         f'<rect class="g" x="3" y="2" width="{width-6}" height="{height-9}" rx="9" '
-        f'fill="{t["accent"]}"/>'
-        f'{icons.draw(icon, 18, (height-9)/2 + 2 - isize/2, isize, t["accent"])}'
-        f'{offbit.text(label, 50, height/2 + 3, 15, t["text"], style="bold", tracking=0.05)}'
+        f'fill="var(--accent)"/>'
+        f'{icons.draw(icon, 18, (height-9)/2 + 2 - isize/2, isize, "var(--accent)")}'
+        f'{offbit.text(label, 50, height/2 + 3, 15, "var(--text)", style="bold", tracking=0.05)}'
         f'</svg>\n'
     )

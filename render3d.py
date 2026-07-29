@@ -32,8 +32,8 @@ FRAMES = 48
 DUR = 4.0
 SLICE = 100.0 / FRAMES
 FLOAT_DUR = 7.0
-N_TURN = 28                               # must match bake_mac_png.py
-REEL_DUR = 3.6                            # seconds for one full turntable loop
+N_TURN = 72                               # must match bake_mac_png.py
+REEL_DUR = 9.0                            # seconds for one full turntable loop
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 

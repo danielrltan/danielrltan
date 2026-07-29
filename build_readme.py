@@ -285,15 +285,21 @@ activity_panel = emit(
     "panel-activity",
     lambda th: contrib.build(s.get("calendar", []), s.get("calendar_total", 0), th))
 
+# Each button is ONE self-theming SVG placed as a plain <img>, not a
+# dark/light <picture> pair: GitHub wraps <picture> in themed-picture, which
+# renders block-level and stacks the buttons vertically. A bare <img> stays
+# inline, so the four sit in a row; the theme switch happens inside the SVG
+# via prefers-color-scheme (see panels.button).
 buttons = []
 for label, url, icon in CHOOSER:
-    mk = emit(f"btn-{label.lower()}",
-              lambda th, l=label, ic=icon: panels.button(l, ic, th))
+    fname = f"btn-{label.lower()}.svg"
+    with open(fname, "w", encoding="utf-8", newline="\n") as fh:
+        fh.write(panels.button(label, icon, PANEL_THEMES))
     # No whitespace between the anchors: a newline here renders as a linked
     # gap on GitHub (the stray blue tick between buttons).
-    buttons.append(f'<a href="{url}">{mk}</a>')
+    buttons.append(f'<a href="{url}"><img alt="{fname[:-4]}" src="./{fname}"></a>')
 chooser = "".join(buttons)
-print(f"wrote {(len(SECTIONS) + 3 + len(CHOOSER)) * 2} panel SVGs")
+print(f"wrote {(len(SECTIONS) + 3) * 2 + len(CHOOSER)} panel SVGs")
 
 # Each title bar rides directly above its own panel inside one centered block,
 # so the page reads as coupled sections instead of floating strips.
