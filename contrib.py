@@ -110,8 +110,6 @@ def build(calendar, total, theme):
     legend = offbit.text(
         f"{current} DAY STREAK  /  {active} ACTIVE DAYS",
         PAD_L, H - 14, 12.5, theme["dim"], style="dot", tracking=0.06)
-    scale = offbit.text("52 WEEKS", W - PAD_L, H - 14, 12.5, theme["dim"],
-                        style="dot", tracking=0.06, anchor="end")
 
     # The city builds once on load: each column rises up into place, swept
     # left-to-right by the per-column delay, then SETTLES (fill: both). We
@@ -129,5 +127,5 @@ def build(calendar, total, theme):
         f'aria-label="Contribution activity over 52 weeks">'
         f'<style>{css}</style>'
         f'<rect width="{W}" height="{H}" fill="{theme["bg"]}"/>'
-        f'{"".join(ticks)}{"".join(body)}{legend}{scale}</svg>\n'
+        f'{"".join(ticks)}{"".join(body)}{legend}</svg>\n'
     )
