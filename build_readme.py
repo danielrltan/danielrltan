@@ -47,7 +47,6 @@ info.append([("daniel", BRI), ("@", DIM), ("danielrltan", BRI)])
 info.append([("─" * 50, PRI)])
 info.append(kv("OS:",                    [("macOS, Windows, iOS", TXT)]))
 info.append(kv("Uptime:",                [(uptime, TXT)]))
-info.append(kv("Host:",                  [("Broadridge", TXT)]))
 info.append(kv("Kernel:",                [("CS + Ivey Business student", TXT)]))
 info.append(kv("IDE:",                   [("VS Code", TXT)]))
 info.append([])
@@ -230,7 +229,6 @@ PANEL_THEMES = {
 
 # ---- EDIT ME: what you're actually working on right now ----
 NOW = [
-    ("BROADRIDGE",   "software engineering"),
     ("WESTERN + IVEY", "computer science & business"),
 ]
 
