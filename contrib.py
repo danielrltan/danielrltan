@@ -108,7 +108,7 @@ def build(calendar, total, theme):
                      f'fill="{theme["dim"]}" opacity=".5"/>')
 
     legend = offbit.text(
-        f"{total} CONTRIBUTIONS  /  {current} DAY STREAK  /  {active} ACTIVE DAYS",
+        f"{current} DAY STREAK  /  {active} ACTIVE DAYS",
         PAD_L, H - 14, 12.5, theme["dim"], style="dot", tracking=0.06)
     scale = offbit.text("52 WEEKS", W - PAD_L, H - 14, 12.5, theme["dim"],
                         style="dot", tracking=0.06, anchor="end")
@@ -126,7 +126,7 @@ def build(calendar, total, theme):
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" '
         f'viewBox="0 0 {W} {H}" role="img" '
-        f'aria-label="Contribution activity: {total} contributions over 52 weeks">'
+        f'aria-label="Contribution activity over 52 weeks">'
         f'<style>{css}</style>'
         f'<rect width="{W}" height="{H}" fill="{theme["bg"]}"/>'
         f'{"".join(ticks)}{"".join(body)}{legend}{scale}</svg>\n'
